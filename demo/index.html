@@ -1,0 +1,250 @@
+<!-- Created by Erion Nezha — © 2026 All rights reserved -->
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hospital Management — Demo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#eef2f7;color:#1f2937;min-height:100vh;display:flex;flex-direction:column}
+.top{background:linear-gradient(135deg,#0e7490,#155e75);color:#fff;padding:18px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top h1{font-size:1.25rem}
+.top .role-tag{margin-left:auto;background:#ffffff22;border:1px solid #ffffff44;padding:6px 14px;border-radius:20px;font-size:.8rem}
+.sim{background:#fef3c7;border-bottom:1px solid #f59e0b;color:#92400e;padding:10px 18px;font-size:.85rem;line-height:1.5}
+.tabs{display:flex;gap:8px;padding:14px 18px 0;flex-wrap:wrap}
+.tabs button{background:#fff;border:1px solid #d1d5db;color:#374151;padding:10px 18px;border-radius:10px 10px 0 0;cursor:pointer;font-size:.9rem;font-weight:600;border-bottom:none}
+.tabs button.active{background:#0e7490;color:#fff;border-color:#0e7490}
+main{flex:1;padding:0 18px 40px;max-width:1100px;width:100%;margin:0 auto}
+.panel{display:none;background:#fff;border:1px solid #d1d5db;border-radius:0 12px 12px 12px;padding:22px}
+.panel.active{display:block}
+.card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:16px}
+.card h3{color:#0e7490;margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px}
+.stat{background:linear-gradient(135deg,#0e7490,#155e75);color:#fff;border-radius:12px;padding:18px;text-align:center}
+.stat .n{font-size:1.8rem;font-weight:700}
+.stat .l{font-size:.8rem;opacity:.85;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #e5e7eb}
+th{background:#0e7490;color:#fff}
+tr:nth-child(even) td{background:#f8fafc}
+label{display:block;font-size:.82rem;color:#6b7280;margin:10px 0 4px}
+input,select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:.92rem;background:#fff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.row{grid-template-columns:1fr}}
+button.btn{background:#0e7490;color:#fff;border:none;padding:11px 22px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.92rem;margin-top:14px}
+button.btn:hover{background:#155e75}
+button.ghost{background:#e5e7eb;color:#374151}
+button.ghost:hover{background:#d1d5db}
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.75rem;font-weight:600}
+.b-conf{background:#dcfce7;color:#166534}.b-pend{background:#fef3c7;color:#92400e}.b-done{background:#e0e7ff;color:#3730a3}
+.login-wrap{max-width:420px;margin:50px auto;background:#fff;border-radius:14px;padding:30px;box-shadow:0 4px 20px #0001}
+.login-wrap h2{text-align:center;color:#0e7490;margin-bottom:6px}
+.login-wrap p.sub{text-align:center;color:#6b7280;font-size:.85rem;margin-bottom:18px}
+.rolebtns{display:grid;grid-template-columns:1fr;gap:10px;margin-top:8px}
+.rolebtns button{padding:14px;border-radius:10px;border:2px solid #0e7490;background:#fff;color:#0e7490;font-weight:700;font-size:1rem;cursor:pointer}
+.rolebtns button:hover{background:#0e7490;color:#fff}
+.hidden{display:none!important}
+footer{text-align:center;padding:16px;color:#6b7280;font-size:.82rem;background:#fff;border-top:1px solid #e5e7eb}
+.search{max-width:300px;margin-bottom:12px}
+.modal-bg{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal{background:#fff;border-radius:14px;padding:24px;max-width:440px;width:100%}
+.modal h3{color:#0e7490;margin-bottom:12px}
+.modal p{font-size:.9rem;line-height:1.9}
+</style>
+</head>
+<body>
+
+<!-- ============ MOCK LOGIN ============ -->
+<div id="loginScreen">
+<div class="top"><h1>🏥 Hospital Management System</h1></div>
+<div class="sim">⚠️ <strong>SIMULIM</strong> — kjo është një demo statike në browser. Origjinali kërkon <strong>PHP + MySQL</strong> (baza <em>hms</em>). Hyrja më poshtë është <strong>mock demonstrimi</strong> — nuk përdoren kredenciale reale.</div>
+<div class="login-wrap">
+<h2>🔐 Hyrje (Demo)</h2>
+<p class="sub">Zgjidh rolin për të parë pamjen përkatëse — pa fjalëkalim, pa llogari reale.</p>
+<div class="rolebtns">
+<button onclick="enter('pacient')">👤 Hyr si Pacient</button>
+<button onclick="enter('mjek')">🩺 Hyr si Mjek</button>
+<button onclick="enter('admin')">🛠️ Hyr si Admin</button>
+</div>
+</div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="hidden">
+<div class="top"><h1>🏥 Hospital Management System</h1><span class="role-tag" id="roleTag"></span><button class="btn ghost" style="margin:0;padding:8px 16px" onclick="logout()">Dil</button></div>
+<div class="sim">⚠️ <strong>SIMULIM</strong> — të dhënat janë shembull në shqip. Origjinali PHP kërkon server + MySQL.</div>
+<div class="tabs">
+<button class="active" id="tb-pacient" onclick="showRole('pacient')">👤 Pacient</button>
+<button id="tb-mjek" onclick="showRole('mjek')">🩺 Mjek</button>
+<button id="tb-admin" onclick="showRole('admin')">🛠️ Admin</button>
+</div>
+<main>
+
+<!-- PACIENT -->
+<div class="panel active" id="p-pacient">
+<div class="card">
+<h3>📅 Rezervo takim</h3>
+<div class="row">
+<div><label>Specializimi</label><select id="bk-spec" onchange="fillDoctors()"></select></div>
+<div><label>Mjeku</label><select id="bk-doc"></select></div>
+</div>
+<div class="row">
+<div><label>Data</label><input type="date" id="bk-date" value="2026-09-28"></div>
+<div><label>Ora</label><select id="bk-time"><option>09:00</option><option>10:00</option><option>11:00</option><option>12:00</option><option>14:00</option><option>15:00</option><option>16:00</option></select></div>
+</div>
+<div><label>Arsyeja</label><input id="bk-reason" placeholder="p.sh. kontroll rutinë"></div>
+<button class="btn" onclick="book()">Rezervo takimin</button>
+<p id="bk-msg" style="margin-top:10px;font-size:.88rem"></p>
+</div>
+<div class="card">
+<h3>🗂️ Takimet e mia</h3>
+<table><tr><th>Mjeku</th><th>Specializimi</th><th>Data</th><th>Ora</th><th>Statusi</th></tr><tbody id="myAppts"></tbody></table>
+</div>
+</div>
+
+<!-- MJEK -->
+<div class="panel" id="p-mjek">
+<div class="card">
+<h3>🩺 Takimet e sotme — Dr. Elira Hoxha</h3>
+<table><tr><th>Ora</th><th>Pacienti</th><th>Arsyeja</th><th>Statusi</th><th></th></tr><tbody id="docAppts"></tbody></table>
+</div>
+<div class="card">
+<h3>👥 Pacientët e mi</h3>
+<table><tr><th>Emri</th><th>Mosha</th><th>Diagnoza e fundit</th><th>Vizita e fundit</th></tr><tbody id="docPatients"></tbody></table>
+</div>
+</div>
+
+<!-- ADMIN -->
+<div class="panel" id="p-admin">
+<div class="stats">
+<div class="stat"><div class="n" id="st-pat">0</div><div class="l">Pacientë</div></div>
+<div class="stat"><div class="n" id="st-doc">0</div><div class="l">Mjekë</div></div>
+<div class="stat"><div class="n" id="st-appt">0</div><div class="l">Takime sot</div></div>
+<div class="stat"><div class="n" id="st-pend">0</div><div class="l">Në pritje</div></div>
+</div>
+<div class="card">
+<h3>👨‍⚕️ Menaxho mjekët</h3>
+<input class="search" id="docSearch" placeholder="🔍 Kërko mjek…" oninput="renderDocs()">
+<table><tr><th>Emri</th><th>Specializimi</th><th>Email</th><th>Takime sot</th></tr><tbody id="adminDocs"></tbody></table>
+</div>
+<div class="card">
+<h3>🧑‍🤝‍🧑 Menaxho pacientët</h3>
+<input class="search" id="patSearch" placeholder="🔍 Kërko pacient…" oninput="renderPats()">
+<table><tr><th>Emri</th><th>Mosha</th><th>Telefoni</th><th>Takimi i radhës</th></tr><tbody id="adminPats"></tbody></table>
+</div>
+</div>
+
+</main>
+</div>
+
+<div id="modal" class="hidden"></div>
+
+<footer>Krijuar nga <strong>Erion Nezha</strong> — © 2026</footer>
+
+<script>
+/* ============ MOCK DATA (shqip) ============ */
+const DOCTORS=[
+ {n:"Dr. Elira Hoxha",s:"Kardiologji",e:"e.hoxha@spital.al",t:5},
+ {n:"Dr. Arben Krasniqi",s:"Ortopedi",e:"a.krasniqi@spital.al",t:3},
+ {n:"Dr. Mimoza Dervishi",s:"Pediatri",e:"m.dervishi@spital.al",t:6},
+ {n:"Dr. Fatmir Shehu",s:"Neurologji",e:"f.shehu@spital.al",t:2},
+ {n:"Dr. Anisa Balla",s:"Dermatologji",e:"a.balla@spital.al",t:4}];
+const SPECS=[...new Set(DOCTORS.map(d=>d.s))];
+const PATIENTS=[
+ {n:"Gentian Meta",a:45,d:"Hipertension",v:"2026-09-10",ph:"067 123 4567",nx:"2026-09-24 09:00"},
+ {n:"Alketa Prifti",a:32,d:"Kontroll shtatzënie",v:"2026-09-15",ph:"069 234 5678",nx:"2026-09-24 10:00"},
+ {n:"Bujar Kola",a:58,d:"Dhimbje gjuri",v:"2026-08-28",ph:"068 345 6789",nx:"2026-09-24 11:00"},
+ {n:"Elira Gjoka",a:7,d:"Vaksinim",v:"2026-09-05",ph:"067 456 7890",nx:"2026-09-25 09:30"},
+ {n:"Pëllumb Zeka",a:63,d:"Migrenë kronike",v:"2026-09-12",ph:"069 567 8901",nx:"2026-09-24 14:00"},
+ {n:"Jonida Hysa",a:29,d:"Alergji lëkure",v:"2026-09-18",ph:"068 678 9012",nx:"2026-09-26 10:00"}];
+let MYAPPTS=[
+ {d:"Dr. Elira Hoxha",s:"Kardiologji",date:"2026-09-24",time:"09:00",st:"Konfirmuar"},
+ {d:"Dr. Mimoza Dervishi",s:"Pediatri",date:"2026-10-02",time:"10:00",st:"Në pritje"}];
+const DOCAPPTS=[
+ {time:"09:00",p:"Gentian Meta",r:"Kontroll tensioni",st:"Konfirmuar"},
+ {time:"10:00",p:"Alketa Prifti",r:"Eko",st:"Konfirmuar"},
+ {time:"11:00",p:"Bujar Kola",r:"Dhimbje gjuri",st:"Në pritje"},
+ {time:"14:00",p:"Pëllumb Zeka",r:"EEG",st:"Në pritje"}];
+
+/* ============ LOGIN MOCK ============ */
+const ROLE_NAMES={pacient:"👤 Pacient (demo)",mjek:"🩺 Mjek (demo)",admin:"🛠️ Admin (demo)"};
+function enter(role){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  showRole(role);window.scrollTo(0,0);
+}
+function logout(){
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+function showRole(role){
+  ['pacient','mjek','admin'].forEach(r=>{
+    document.getElementById('p-'+r).classList.remove('active');
+    document.getElementById('tb-'+r).classList.remove('active');
+  });
+  document.getElementById('p-'+role).classList.add('active');
+  document.getElementById('tb-'+role).classList.add('active');
+  document.getElementById('roleTag').textContent=ROLE_NAMES[role];
+  window.scrollTo(0,0);
+}
+
+/* ============ PACIENT ============ */
+function fillDoctors(){
+  const s=document.getElementById('bk-spec').value;
+  document.getElementById('bk-doc').innerHTML=DOCTORS.filter(d=>d.s===s).map(d=>`<option>${d.n}</option>`).join('');
+}
+document.getElementById('bk-spec').innerHTML=SPECS.map(s=>`<option>${s}</option>`).join('');
+fillDoctors();
+function stBadge(st){
+  const c=st==='Konfirmuar'?'b-conf':st==='Në pritje'?'b-pend':'b-done';
+  return `<span class="badge ${c}">${st}</span>`;
+}
+function renderMy(){
+  document.getElementById('myAppts').innerHTML=MYAPPTS.map(a=>`<tr><td>${a.d}</td><td>${a.s}</td><td>${a.date}</td><td>${a.time}</td><td>${stBadge(a.st)}</td></tr>`).join('');
+}
+renderMy();
+function book(){
+  const d=document.getElementById('bk-doc').value,s=document.getElementById('bk-spec').value,
+        date=document.getElementById('bk-date').value,time=document.getElementById('bk-time').value;
+  if(!date){document.getElementById('bk-msg').textContent='⚠️ Zgjidh datën.';document.getElementById('bk-msg').style.color='#b45309';return;}
+  MYAPPTS.push({d,s,date,time,st:'Në pritje'});renderMy();
+  document.getElementById('bk-msg').textContent='✅ Takimi u rezervua (demo). Statusi: Në pritje.';
+  document.getElementById('bk-msg').style.color='#166534';
+}
+
+/* ============ MJEK ============ */
+document.getElementById('docAppts').innerHTML=DOCAPPTS.map((a,i)=>`<tr><td>${a.time}</td><td>${a.p}</td><td>${a.r}</td><td>${stBadge(a.st)}</td><td><button class="btn ghost" style="margin:0;padding:6px 12px" onclick="patientDetail(${i})">Detaje</button></td></tr>`).join('');
+document.getElementById('docPatients').innerHTML=PATIENTS.map(p=>`<tr><td>${p.n}</td><td>${p.a}</td><td>${p.d}</td><td>${p.v}</td></tr>`).join('');
+function patientDetail(i){
+  const p=PATIENTS.find(x=>x.n===DOCAPPTS[i].p)||{n:DOCAPPTS[i].p,a:'—',d:'—',v:'—',ph:'—'};
+  document.getElementById('modal').innerHTML=`<div class="modal-bg" onclick="closeModal(event)"><div class="modal">
+  <h3>👤 ${p.n}</h3>
+  <p><strong>Mosha:</strong> ${p.a}<br><strong>Telefoni:</strong> ${p.ph}<br>
+  <strong>Diagnoza e fundit:</strong> ${p.d}<br><strong>Vizita e fundit:</strong> ${p.v}<br>
+  <strong>Arsyeja e takimit:</strong> ${DOCAPPTS[i].r}</p>
+  <button class="btn" onclick="document.getElementById('modal').classList.add('hidden')">Mbyll</button></div></div>`;
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal(e){if(e.target.classList.contains('modal-bg'))document.getElementById('modal').classList.add('hidden');}
+
+/* ============ ADMIN ============ */
+function renderDocs(){
+  const q=(document.getElementById('docSearch').value||'').toLowerCase();
+  document.getElementById('adminDocs').innerHTML=DOCTORS.filter(d=>(d.n+d.s).toLowerCase().includes(q))
+    .map(d=>`<tr><td>${d.n}</td><td>${d.s}</td><td>${d.e}</td><td>${d.t}</td></tr>`).join('');
+}
+function renderPats(){
+  const q=(document.getElementById('patSearch').value||'').toLowerCase();
+  document.getElementById('adminPats').innerHTML=PATIENTS.filter(p=>p.n.toLowerCase().includes(q))
+    .map(p=>`<tr><td>${p.n}</td><td>${p.a}</td><td>${p.ph}</td><td>${p.nx}</td></tr>`).join('');
+}
+renderDocs();renderPats();
+document.getElementById('st-pat').textContent=PATIENTS.length*42;
+document.getElementById('st-doc').textContent=DOCTORS.length*3;
+document.getElementById('st-appt').textContent=DOCAPPTS.length+16;
+document.getElementById('st-pend').textContent=7;
+</script>
+</body>
+</html>
